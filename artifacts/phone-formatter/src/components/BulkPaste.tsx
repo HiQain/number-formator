@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { ClipboardList, Copy, Eraser, AlertCircle } from "lucide-react";
+import { useLocation } from "wouter";
+import { ClipboardList, Copy, Eraser, AlertCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,7 @@ export function BulkPaste() {
   const [input, setInput] = useState("");
   const [format, setFormat] = useState<string>(FORMAT_OPTIONS[0]);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { lines, formattedLines, validCount, invalidCount, truncated } = useMemo(() => {
     const rawLines = input
@@ -74,6 +76,15 @@ export function BulkPaste() {
 
   const handleClear = () => {
     setInput("");
+  };
+
+  const handleCheckRegion = () => {
+    try {
+      sessionStorage.setItem("region:numbers", input);
+    } catch {
+      // ignore storage errors
+    }
+    setLocation("/region");
   };
 
   return (
@@ -180,6 +191,16 @@ export function BulkPaste() {
           >
             <Eraser className="h-4 w-4 mr-2" />
             Clear
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleCheckRegion}
+            disabled={input.trim().length === 0}
+            data-testid="button-check-region"
+            className="cursor-pointer"
+          >
+            <MapPin className="h-4 w-4 mr-2" />
+            Check Region
           </Button>
           <Button onClick={handleCopy} disabled={formattedLines.length === 0} className="cursor-pointer">
             <Copy className="h-4 w-4 mr-2" />

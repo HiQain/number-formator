@@ -29,13 +29,27 @@ interface Row {
 }
 
 export function RegionChecker() {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => {
+    try {
+      return sessionStorage.getItem("region:numbers") ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("region:numbers", input);
+    } catch {
+      // ignore
+    }
+  }, [input]);
 
   const rows = useMemo<Row[]>(() => {
     return input
