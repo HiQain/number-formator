@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import RegionPage from "@/pages/region";
 import { BulkValidator } from "@/components/BulkValidator";
 import { BulkPaste } from "@/components/BulkPaste";
+import { SiteFooter } from "@/components/SiteFooter";
 import { PhoneCall, MapPin } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -36,11 +37,7 @@ function Home() {
         <BulkValidator />
       </main>
 
-      <footer className="border-t py-6 bg-muted/30">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground max-w-6xl">
-          <p>FormatPhone is a local utility. No data is sent to external servers.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

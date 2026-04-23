@@ -3,10 +3,73 @@
 
   export type Timezone = "EST" | "CST" | "MST" | "PST" | "AKST" | "HST" | "AST";
 
-  export interface AreaCodeInfo {
-    tz: Timezone;
-    region: string;
-  }
+export interface AreaCodeInfo {
+  tz: Timezone;
+  region: string;
+  city?: string;
+}
+
+const AREA_CODE_CITIES: Partial<Record<string, string>> = {
+  "202": "Washington, District of Columbia",
+  "206": "Seattle, Washington",
+  "210": "San Antonio, Texas",
+  "212": "Manhattan, New York",
+  "213": "Los Angeles, California",
+  "214": "Dallas, Texas",
+  "281": "Houston, Texas",
+  "303": "Denver, Colorado",
+  "305": "Miami, Florida",
+  "312": "Chicago, Illinois",
+  "321": "Orlando, Florida",
+  "323": "Los Angeles, California",
+  "346": "Houston, Texas",
+  "360": "Olympia, Washington",
+  "361": "Corpus Christi, Texas",
+  "404": "Atlanta, Georgia",
+  "408": "San Jose, California",
+  "409": "Beaumont, Texas",
+  "415": "San Francisco, California",
+  "469": "Dallas, Texas",
+  "470": "Atlanta, Georgia",
+  "480": "Mesa, Arizona",
+  "503": "Portland, Oregon",
+  "504": "New Orleans, Louisiana",
+  "512": "Austin, Texas",
+  "602": "Phoenix, Arizona",
+  "617": "Boston, Massachusetts",
+  "646": "Manhattan, New York",
+  "650": "San Mateo, California",
+  "678": "Atlanta, Georgia",
+  "682": "Fort Worth, Texas",
+  "702": "Las Vegas, Nevada",
+  "703": "Arlington, Virginia",
+  "704": "Charlotte, North Carolina",
+  "713": "Houston, Texas",
+  "714": "Anaheim, California",
+  "718": "New York City, New York",
+  "737": "Austin, Texas",
+  "760": "Palm Springs, California",
+  "786": "Miami, Florida",
+  "787": "San Juan, Puerto Rico",
+  "801": "Salt Lake City, Utah",
+  "805": "Santa Barbara, California",
+  "806": "Lubbock, Texas",
+  "817": "Fort Worth, Texas",
+  "818": "Burbank, California",
+  "832": "Houston, Texas",
+  "847": "Northbrook, Illinois",
+  "858": "San Diego, California",
+  "903": "Tyler, Texas",
+  "904": "Jacksonville, Florida",
+  "909": "San Bernardino, California",
+  "915": "El Paso, Texas",
+  "916": "Sacramento, California",
+  "917": "New York City, New York",
+  "929": "New York City, New York",
+  "945": "Dallas, Texas",
+  "971": "Portland, Oregon",
+  "972": "Dallas, Texas",
+};
 
   export const AREA_CODES: Record<string, AreaCodeInfo> = {
   "201": {
@@ -1500,7 +1563,13 @@
   };
 
   export function lookupAreaCode(areaCode: string): AreaCodeInfo | null {
-    return AREA_CODES[areaCode] ?? null;
+    const info = AREA_CODES[areaCode];
+    if (!info) return null;
+
+    return {
+      ...info,
+      city: AREA_CODE_CITIES[areaCode],
+    };
   }
 
   export function getCurrentTimeForTz(tz: Timezone, date = new Date()): string {

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft, PhoneCall } from "lucide-react";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { RegionChecker } from "@/components/RegionChecker";
 
@@ -27,11 +28,7 @@ export default function RegionPage() {
         <RegionChecker />
       </main>
 
-      <footer className="border-t py-6 bg-muted/30">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground max-w-6xl">
-          <p>FormatPhone is a local utility. No data is sent to external servers.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
