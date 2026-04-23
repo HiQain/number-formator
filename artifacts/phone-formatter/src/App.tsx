@@ -1,20 +1,17 @@
-import { useState } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Link, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import NotFound from "@/pages/not-found";
+import RegionPage from "@/pages/region";
 import { BulkValidator } from "@/components/BulkValidator";
 import { BulkPaste } from "@/components/BulkPaste";
-import { RegionChecker } from "@/components/RegionChecker";
 import { PhoneCall, MapPin } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 function Home() {
-  const [showRegion, setShowRegion] = useState(false);
-
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
       <header className="border-b bg-card">
@@ -24,21 +21,17 @@ function Home() {
           </div>
           <h1 className="text-xl font-bold tracking-tight">US Phone Number Formatter</h1>
           <div className="ml-auto">
-            <Button
-              data-testid="button-toggle-region"
-              variant={showRegion ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowRegion((v) => !v)}
-            >
-              <MapPin className="h-4 w-4 mr-1.5" />
-              Check Region
-            </Button>
+            <Link href="/region">
+              <Button data-testid="button-toggle-region" variant="outline" size="sm">
+                <MapPin className="h-4 w-4 mr-1.5" />
+                Check Region
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl space-y-6 lg:space-y-8">
-        {showRegion && <RegionChecker />}
         <BulkPaste />
         <BulkValidator />
       </main>
@@ -56,6 +49,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/region" component={RegionPage} />
       <Route component={NotFound} />
     </Switch>
   );
