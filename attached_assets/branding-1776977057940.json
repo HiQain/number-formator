@@ -1,0 +1,120 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Arial",
+      "role": "body"
+    },
+    {
+      "family": "Open Sans",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#0066FF",
+    "secondary": "#C24846",
+    "accent": "#31496F",
+    "background": "#EEEEEE",
+    "textPrimary": "#000000",
+    "link": "#31496F"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Arial",
+      "heading": "Arial"
+    },
+    "fontStacks": {
+      "heading": [
+        "Open Sans",
+        "sans-serif"
+      ],
+      "body": [
+        "Open Sans",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Open Sans",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "26px",
+      "h2": "26px",
+      "body": "17.3333px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "0px"
+  },
+  "components": {
+    "buttonPrimary": {
+      "background": "#31496F",
+      "textColor": "#FFFFFF",
+      "borderRadius": "6px",
+      "borderRadiusCorners": {
+        "topLeft": "6px",
+        "topRight": "6px",
+        "bottomRight": "6px",
+        "bottomLeft": "6px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "https://greatdata.com/images/logo.webp?v=3",
+    "favicon": "https://greatdata.com/images/favicon.png",
+    "ogImage": null,
+    "logoHref": "File saved at: attached_assets/logoHref.html",
+    "logoAlt": "GreatData.com"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Selected #0 because it is a large, visible logo in the header with a source URL matching the brand domain, and it links to the homepage.",
+    "confidence": 0.95,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "Register",
+      "reasoning": "The 'Register' button is likely the primary CTA due to its action-oriented text and the use of a vibrant brand color (#31496F), which is consistent with primary CTA design."
+    },
+    "secondary": {
+      "index": -1,
+      "text": "N/A",
+      "reasoning": "Both buttons share the same color, making it impossible to designate a secondary button with a different background color."
+    },
+    "confidence": 0.9
+  },
+  "personality": {
+    "tone": "professional",
+    "energy": "medium",
+    "targetAudience": "business professionals and data analysts"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.9,
+    "colors": 0.95,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 0,
+        "selectedLogoReasoning": "Selected #0 because it is a large, visible logo in the header with a source URL matching the brand domain, and it links to the homepage.",
+        "confidence": 0.95
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
