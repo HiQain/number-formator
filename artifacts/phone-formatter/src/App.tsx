@@ -3,8 +3,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import BlogPage from "@/pages/blog";
 import NotFound from "@/pages/not-found";
+import PrivacyPolicyPage from "@/pages/privacy-policy";
 import RegionPage from "@/pages/region";
+import TermsOfServicePage from "@/pages/terms-of-service";
 import { BulkValidator } from "@/components/BulkValidator";
 import { BulkPaste } from "@/components/BulkPaste";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -46,6 +49,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/blog" component={BlogPage} />
+      <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+      <Route path="/terms-of-service" component={TermsOfServicePage} />
       <Route path="/region" component={RegionPage} />
       <Route component={NotFound} />
     </Switch>

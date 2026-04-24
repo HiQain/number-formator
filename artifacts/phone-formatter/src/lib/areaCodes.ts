@@ -9,6 +9,13 @@ export interface AreaCodeInfo {
   city?: string;
 }
 
+function normalizeCityName(city?: string): string | undefined {
+  if (!city) return undefined;
+
+  const [name] = city.split(",");
+  return name?.trim() || undefined;
+}
+
 const AREA_CODE_CITIES: Partial<Record<string, string>> = {
   "202": "Washington, District of Columbia",
   "206": "Seattle, Washington",
@@ -1566,11 +1573,11 @@ const AREA_CODE_CITIES: Partial<Record<string, string>> = {
     const info = AREA_CODES[areaCode];
     if (!info) return null;
 
-    return {
-      ...info,
-      city: AREA_CODE_CITIES[areaCode],
-    };
-  }
+  return {
+    ...info,
+    city: normalizeCityName(AREA_CODE_CITIES[areaCode]),
+  };
+}
 
   export function getCurrentTimeForTz(tz: Timezone, date = new Date()): string {
     return date.toLocaleTimeString("en-US", {

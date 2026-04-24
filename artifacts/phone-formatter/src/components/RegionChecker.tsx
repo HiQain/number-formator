@@ -1,16 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Clock, MapPin } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, Clock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -37,24 +30,31 @@ interface Row {
     : null;
 }
 
-const FILTER_OPTIONS = [
-  { value: "number", label: "Number" },
-  { value: "region", label: "Region" },
-  { value: "state", label: "State" },
-  { value: "city", label: "City" },
-  { value: "timezone", label: "Timezone" },
-] as const;
+type SortKey = "raw" | "currentTime" | "timezone" | "city" | "state";
 
-const SORT_OPTIONS = [
-  { value: "number", label: "Sort by number" },
-  { value: "alphabetical", label: "Sort by alphabets" },
-] as const;
+const COLUMN_LABELS: Array<{ key: SortKey; label: string }> = [
+  { key: "raw", label: "Phone Number" },
+  { key: "currentTime", label: "Current Time" },
+  { key: "timezone", label: "Timezone" },
+  { key: "city", label: "City" },
+  { key: "state", label: "State" },
+];
 
-type FilterField = (typeof FILTER_OPTIONS)[number]["value"];
-type SortField = (typeof SORT_OPTIONS)[number]["value"];
-
-function normalizeDigits(value: string) {
-  return value.replace(/\D/g, "");
+function getSortValue(row: Row, sortKey: SortKey, now: Date): string {
+  switch (sortKey) {
+    case "raw":
+      return row.raw;
+    case "currentTime":
+      return row.tz ? getCurrentTimeForTz(row.tz, now) : "";
+    case "timezone":
+      return row.tz ? `${row.tz} ${getTzLabel(row.tz)}` : "";
+    case "city":
+      return row.city ?? "";
+    case "state":
+      return row.region ?? "";
+    default:
+      return "";
+  }
 }
 
 export function RegionChecker() {
@@ -66,9 +66,7 @@ export function RegionChecker() {
     }
   });
   const [now, setNow] = useState(() => new Date());
-  const [filterField, setFilterField] = useState<FilterField>("number");
-  const [filterQuery, setFilterQuery] = useState("");
-  const [sortField, setSortField] = useState<SortField>("number");
+  const [sortKey, setSortKey] = useState<SortKey>("raw");
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -103,49 +101,23 @@ export function RegionChecker() {
       });
   }, [input]);
 
-  const filteredRows = useMemo(() => {
-    const query = filterQuery.trim().toLowerCase();
-    if (!query) return rows;
-
-    return rows.filter((row) => {
-      switch (filterField) {
-        case "number":
-          return row.raw.toLowerCase().includes(query);
-        case "region":
-          return `${row.city ?? ""} ${row.region ?? ""}`.toLowerCase().includes(query);
-        case "state":
-          return (row.region ?? "").toLowerCase().includes(query);
-        case "city":
-          return (row.city ?? "").toLowerCase().includes(query);
-        case "timezone":
-          return `${row.tz ?? ""} ${row.tz ? getTzLabel(row.tz) : ""}`.toLowerCase().includes(query);
-        default:
-          return true;
-      }
-    });
-  }, [filterField, filterQuery, rows]);
-
   const sortedRows = useMemo(() => {
-    return [...filteredRows].sort((a, b) => {
-      if (sortField === "alphabetical") {
-        const stateCompare = (a.region ?? "").localeCompare(b.region ?? "", undefined, { sensitivity: "base" });
-        if (stateCompare !== 0) return stateCompare;
+    return [...rows].sort((a, b) => {
+      const valueA = getSortValue(a, sortKey, now);
+      const valueB = getSortValue(b, sortKey, now);
+      const primaryCompare = valueA.localeCompare(valueB, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
 
-        const cityCompare = (a.city ?? "").localeCompare(b.city ?? "", undefined, { sensitivity: "base" });
-        if (cityCompare !== 0) return cityCompare;
-      } else {
-        const numberCompare = normalizeDigits(a.raw).localeCompare(normalizeDigits(b.raw), undefined, {
-          numeric: true,
-        });
-        if (numberCompare !== 0) return numberCompare;
-      }
+      if (primaryCompare !== 0) return primaryCompare;
 
-      return a.raw.localeCompare(b.raw, undefined, { sensitivity: "base" });
+      return a.raw.localeCompare(b.raw, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
     });
-  }, [filteredRows, sortField]);
-
-  const filterLabel =
-    FILTER_OPTIONS.find((option) => option.value === filterField)?.label.toLowerCase() ?? "value";
+  }, [now, rows, sortKey]);
 
   return (
     <Card data-testid="card-region-checker">
@@ -176,62 +148,31 @@ export function RegionChecker() {
         </div>
 
         {rows.length > 0 && (
-          <div className="grid gap-3 md:grid-cols-[220px_220px_minmax(0,1fr)]">
-            <div className="space-y-2">
-              <Label htmlFor="region-filter-field">Filter by</Label>
-              <Select value={filterField} onValueChange={(value) => setFilterField(value as FilterField)}>
-                <SelectTrigger id="region-filter-field" data-testid="select-region-filter-field">
-                  <SelectValue placeholder="Choose a filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="region-sort-field">Sort</Label>
-              <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
-                <SelectTrigger id="region-sort-field" data-testid="select-region-sort-field">
-                  <SelectValue placeholder="Choose a sort" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="region-filter-query">Filter value</Label>
-              <Input
-                id="region-filter-query"
-                data-testid="input-region-filter-query"
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-                placeholder={`Search by ${filterLabel}`}
-              />
-            </div>
-          </div>
-        )}
-
-        {rows.length > 0 && (
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead className="w-[140px]">Current Time</TableHead>
-                  <TableHead className="w-[140px]">Timezone</TableHead>
-                  <TableHead>City</TableHead>
-                  <TableHead>State</TableHead>
+                  {COLUMN_LABELS.map((column) => {
+                    const isActive = sortKey === column.key;
+                    const Icon = isActive ? ArrowDown : ArrowUp;
+
+                    return (
+                      <TableHead
+                        key={column.key}
+                        className={column.key === "currentTime" || column.key === "timezone" ? "w-[140px]" : undefined}
+                      >
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-auto px-0 py-0 font-semibold text-foreground hover:bg-transparent"
+                          onClick={() => setSortKey(column.key)}
+                        >
+                          {column.label}
+                          <Icon className="h-4 w-4" />
+                        </Button>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -283,14 +224,6 @@ export function RegionChecker() {
                     </TableRow>
                   );
                 })}
-
-                {sortedRows.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                      No numbers matched the selected filter.
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           </div>
