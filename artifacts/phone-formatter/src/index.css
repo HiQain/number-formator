@@ -218,8 +218,27 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  body > .skiptranslate,
+  .goog-te-banner-frame,
+  .goog-te-balloon-frame {
+    display: none !important;
+  }
+
+  body {
+    top: 0 !important;
+  }
+
+  .goog-te-gadget,
+  .goog-logo-link {
+    display: none !important;
   }
 }
 

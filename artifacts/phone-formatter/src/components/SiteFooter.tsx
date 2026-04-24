@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { LanguageBar } from "@/components/LanguageBar";
 
 const FOOTER_LINKS = [
   { href: "/", label: "Home" },
@@ -41,6 +42,8 @@ export function SiteFooter() {
           </a>
         </div>
       </div>
+
+      <LanguageBar />
     </footer>
   );
 }
