@@ -1,4 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 declare global {
   interface Window {
@@ -28,18 +35,24 @@ declare global {
 const GOOGLE_SCRIPT_ID = "google-translate-script";
 const STORAGE_KEY = "phone-formatter-language";
 
-const LANGUAGE_OPTIONS = [
+export const LANGUAGE_OPTIONS: ReadonlyArray<{
+  label: string;
+  code: string;
+  italic?: boolean;
+}> = [
   { label: "English", code: "en" },
-  { label: "Deutsch", code: "de" },
-  { label: "Espanol", code: "es" },
-  { label: "Francais", code: "fr" },
-  { label: "Italiano", code: "it" },
+  { label: "German", code: "de" },
+  { label: "Spanish", code: "es" },
+  { label: "French", code: "fr" },
+  { label: "Italic", code: "it" },
   { label: "Portuguese", code: "pt" },
   { label: "Indonesian", code: "id" },
-  { label: "Russkiy", code: "ru" },
+  { label: "Russian", code: "ru" },
   { label: "Thai", code: "th" },
-  { label: "Arabi", code: "ar" },
-] as const;
+  { label: "Arabic", code: "ar" },
+];
+
+type LanguageCode = (typeof LANGUAGE_OPTIONS)[number]["code"];
 
 function getGoogleTranslateCookieValue(languageCode: string) {
   return `/en/${languageCode}`;
@@ -91,7 +104,26 @@ function dispatchTranslateChange(languageCode: string) {
   return true;
 }
 
-export function LanguageBar() {
+function translateToLanguage(languageCode: LanguageCode, selectedLanguage: string) {
+  if (languageCode === selectedLanguage) {
+    return;
+  }
+
+  setGoogleTranslateCookie(languageCode);
+  window.localStorage.setItem(STORAGE_KEY, languageCode);
+  document.documentElement.lang = languageCode;
+
+  if (dispatchTranslateChange(languageCode)) {
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 150);
+    return;
+  }
+
+  window.location.reload();
+}
+
+function useTranslatorState() {
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [translatorStatus, setTranslatorStatus] = useState<"loading" | "ready" | "error">(
     "loading",
@@ -125,7 +157,7 @@ export function LanguageBar() {
 
       setTranslatorStatus("ready");
 
-      const languageToApply = window.localStorage.getItem(STORAGE_KEY) ?? "en";
+      const languageToApply = getStoredLanguage();
       window.setTimeout(() => {
         dispatchTranslateChange(languageToApply);
       }, 250);
@@ -166,50 +198,64 @@ export function LanguageBar() {
       };
     }
 
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.id = GOOGLE_SCRIPT_ID;
-      script.src = "https://translate.google.com/translate_a/element.js";
-      script.async = true;
-      script.addEventListener("load", handleScriptLoad);
-      script.addEventListener("error", handleScriptError);
-      document.body.appendChild(script);
+    const script = document.createElement("script");
+    script.id = GOOGLE_SCRIPT_ID;
+    script.src = "https://translate.google.com/translate_a/element.js";
+    script.async = true;
+    script.addEventListener("load", handleScriptLoad);
+    script.addEventListener("error", handleScriptError);
+    document.body.appendChild(script);
 
-      const timeoutId = window.setTimeout(() => {
-        if (!window.google?.translate?.TranslateElement) {
-          setTranslatorStatus("error");
-        }
-      }, 8000);
+    const timeoutId = window.setTimeout(() => {
+      if (!window.google?.translate?.TranslateElement) {
+        setTranslatorStatus("error");
+      }
+    }, 8000);
 
-      return () => {
-        window.clearTimeout(timeoutId);
-        script.removeEventListener("load", handleScriptLoad);
-        script.removeEventListener("error", handleScriptError);
-      };
-    }
-
-    return undefined;
+    return () => {
+      window.clearTimeout(timeoutId);
+      script.removeEventListener("load", handleScriptLoad);
+      script.removeEventListener("error", handleScriptError);
+    };
   }, []);
 
-  const handleLanguageSelect = (languageCode: string) => {
-    if (languageCode === selectedLanguage) {
-      return;
-    }
-
+  const selectLanguage = (languageCode: string) => {
     setSelectedLanguage(languageCode);
-    setGoogleTranslateCookie(languageCode);
-    window.localStorage.setItem(STORAGE_KEY, languageCode);
-    document.documentElement.lang = languageCode;
-
-    if (dispatchTranslateChange(languageCode)) {
-      window.setTimeout(() => {
-        window.location.reload();
-      }, 150);
-      return;
-    }
-
-    window.location.reload();
+    translateToLanguage(languageCode as LanguageCode, selectedLanguage);
   };
+
+  return { selectedLanguage, selectLanguage, translatorStatus };
+}
+
+export function LanguageSelector({
+  className,
+}: {
+  className?: string;
+}) {
+  const { selectedLanguage, selectLanguage } = useTranslatorState();
+
+  return (
+    <Select value={selectedLanguage} onValueChange={selectLanguage}>
+      <SelectTrigger
+        className={className ?? "h-9 w-[156px] bg-background"}
+        data-testid="select-language"
+        aria-label="Select language"
+      >
+        <SelectValue placeholder="Language" />
+      </SelectTrigger>
+      <SelectContent>
+        {LANGUAGE_OPTIONS.map((language) => (
+          <SelectItem key={language.code} value={language.code}>
+            <span className={language.italic ? "italic" : undefined}>{language.label}</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+export function LanguageBar() {
+  const { selectedLanguage, selectLanguage, translatorStatus } = useTranslatorState();
 
   return (
     <div className="border-t bg-background/95">
@@ -222,11 +268,14 @@ export function LanguageBar() {
               <button
                 key={language.code}
                 type="button"
-                onClick={() => handleLanguageSelect(language.code)}
+                onClick={() => selectLanguage(language.code)}
                 className={[
                   "cursor-pointer transition-colors hover:text-primary",
+                  language.italic ? "italic" : "",
                   isActive ? "text-primary" : "text-foreground",
-                ].join(" ")}
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 data-testid={`button-language-${language.code}`}
               >
                 {language.label}

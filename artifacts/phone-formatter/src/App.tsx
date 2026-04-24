@@ -11,6 +11,7 @@ import TermsOfServicePage from "@/pages/terms-of-service";
 import { BulkValidator } from "@/components/BulkValidator";
 import { BulkPaste } from "@/components/BulkPaste";
 import { SiteFooter } from "@/components/SiteFooter";
+import { LanguageSelector } from "@/components/LanguageBar";
 import { PhoneCall, MapPin } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -24,7 +25,8 @@ function Home() {
             <PhoneCall className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-xl font-bold tracking-tight">US Phone Number Formatter</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <LanguageSelector className="h-9 w-[148px] bg-background" />
             <Link href="/region">
               <Button data-testid="button-toggle-region" variant="outline" size="sm">
                 <MapPin className="h-4 w-4 mr-1.5" />

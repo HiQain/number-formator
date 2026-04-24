@@ -12,7 +12,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto grid max-w-6xl gap-3 px-4 py-4 text-sm text-muted-foreground md:grid-cols-3 md:items-center">
-        <p className="text-center md:text-left">Copyright 2026 Hiqain Phone Formatter.</p>
+        <p className="text-center">Copyrights © 2026 Phone Number Formatter.<br/> <span className="text-center"> All Rights Reserved. </span></p>
 
         <nav
           aria-label="Footer"
@@ -38,7 +38,7 @@ export function SiteFooter() {
             rel="noreferrer"
             className="transition-colors hover:text-primary hover:underline"
           >
-            Powered By Hiqain Pvt Ltd
+            Powered By Hiqain
           </a>
         </div>
       </div>
