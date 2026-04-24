@@ -32,7 +32,6 @@ interface Row {
   areaCode: string | null;
   region: string | null;
   city: string | null;
-  regionDisplay: string | null;
   tz: ReturnType<typeof lookupAreaCode> extends infer T
     ? T extends { tz: infer U } ? U : null
     : null;
@@ -44,10 +43,19 @@ const FILTER_OPTIONS = [
   { value: "state", label: "State" },
   { value: "city", label: "City" },
   { value: "timezone", label: "Timezone" },
-  { value: "areaCode", label: "Area Code" },
+] as const;
+
+const SORT_OPTIONS = [
+  { value: "number", label: "Sort by number" },
+  { value: "alphabetical", label: "Sort by alphabets" },
 ] as const;
 
 type FilterField = (typeof FILTER_OPTIONS)[number]["value"];
+type SortField = (typeof SORT_OPTIONS)[number]["value"];
+
+function normalizeDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
 
 export function RegionChecker() {
   const [input, setInput] = useState(() => {
@@ -60,6 +68,7 @@ export function RegionChecker() {
   const [now, setNow] = useState(() => new Date());
   const [filterField, setFilterField] = useState<FilterField>("number");
   const [filterQuery, setFilterQuery] = useState("");
+  const [sortField, setSortField] = useState<SortField>("number");
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -89,7 +98,6 @@ export function RegionChecker() {
           areaCode,
           region: info?.region ?? null,
           city: info?.city ?? null,
-          regionDisplay: info?.city ?? info?.region ?? null,
           tz: (info?.tz ?? null) as Row["tz"],
         };
       });
@@ -104,20 +112,37 @@ export function RegionChecker() {
         case "number":
           return row.raw.toLowerCase().includes(query);
         case "region":
-          return `${row.regionDisplay ?? ""} ${row.region ?? ""}`.toLowerCase().includes(query);
+          return `${row.city ?? ""} ${row.region ?? ""}`.toLowerCase().includes(query);
         case "state":
           return (row.region ?? "").toLowerCase().includes(query);
         case "city":
           return (row.city ?? "").toLowerCase().includes(query);
         case "timezone":
           return `${row.tz ?? ""} ${row.tz ? getTzLabel(row.tz) : ""}`.toLowerCase().includes(query);
-        case "areaCode":
-          return (row.areaCode ?? "").toLowerCase().includes(query);
         default:
           return true;
       }
     });
   }, [filterField, filterQuery, rows]);
+
+  const sortedRows = useMemo(() => {
+    return [...filteredRows].sort((a, b) => {
+      if (sortField === "alphabetical") {
+        const stateCompare = (a.region ?? "").localeCompare(b.region ?? "", undefined, { sensitivity: "base" });
+        if (stateCompare !== 0) return stateCompare;
+
+        const cityCompare = (a.city ?? "").localeCompare(b.city ?? "", undefined, { sensitivity: "base" });
+        if (cityCompare !== 0) return cityCompare;
+      } else {
+        const numberCompare = normalizeDigits(a.raw).localeCompare(normalizeDigits(b.raw), undefined, {
+          numeric: true,
+        });
+        if (numberCompare !== 0) return numberCompare;
+      }
+
+      return a.raw.localeCompare(b.raw, undefined, { sensitivity: "base" });
+    });
+  }, [filteredRows, sortField]);
 
   const filterLabel =
     FILTER_OPTIONS.find((option) => option.value === filterField)?.label.toLowerCase() ?? "value";
@@ -151,7 +176,7 @@ export function RegionChecker() {
         </div>
 
         {rows.length > 0 && (
-          <div className="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)]">
+          <div className="grid gap-3 md:grid-cols-[220px_220px_minmax(0,1fr)]">
             <div className="space-y-2">
               <Label htmlFor="region-filter-field">Filter by</Label>
               <Select value={filterField} onValueChange={(value) => setFilterField(value as FilterField)}>
@@ -160,6 +185,22 @@ export function RegionChecker() {
                 </SelectTrigger>
                 <SelectContent>
                   {FILTER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="region-sort-field">Sort</Label>
+              <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
+                <SelectTrigger id="region-sort-field" data-testid="select-region-sort-field">
+                  <SelectValue placeholder="Choose a sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -187,22 +228,19 @@ export function RegionChecker() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead className="w-[110px]">Area Code</TableHead>
                   <TableHead className="w-[140px]">Current Time</TableHead>
                   <TableHead className="w-[140px]">Timezone</TableHead>
-                  <TableHead>Region</TableHead>
+                  <TableHead>City</TableHead>
+                  <TableHead>State</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRows.map((row, i) => {
+                {sortedRows.map((row, i) => {
                   const recognized = row.region && row.tz;
 
                   return (
                     <TableRow key={`${row.raw}-${i}`} data-testid={`row-region-${i}`}>
                       <TableCell className="font-mono text-sm">{row.raw}</TableCell>
-                      <TableCell className="font-mono">
-                        {row.areaCode ?? <span className="text-muted-foreground">-</span>}
-                      </TableCell>
                       <TableCell>
                         {recognized ? (
                           <span className="inline-flex items-center gap-1.5 font-mono text-sm">
@@ -216,7 +254,7 @@ export function RegionChecker() {
                       <TableCell>
                         {recognized ? (
                           <Badge variant="secondary" className="font-mono">
-                            {row.tz} · {getTzLabel(row.tz!)}
+                            {row.tz} - {getTzLabel(row.tz!)}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -224,7 +262,17 @@ export function RegionChecker() {
                       </TableCell>
                       <TableCell>
                         {recognized ? (
-                          row.regionDisplay
+                          row.city ?? <span className="text-muted-foreground">-</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-destructive">
+                            <AlertCircle className="h-3.5 w-3.5" />
+                            Unknown area code
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {recognized ? (
+                          row.region ?? <span className="text-muted-foreground">-</span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 text-sm text-destructive">
                             <AlertCircle className="h-3.5 w-3.5" />
@@ -236,7 +284,7 @@ export function RegionChecker() {
                   );
                 })}
 
-                {filteredRows.length === 0 && (
+                {sortedRows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
                       No numbers matched the selected filter.
